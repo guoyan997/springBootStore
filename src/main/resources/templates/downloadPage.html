@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+		<meta charset="UTF-8">
+		<title>下载 </title>
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+		<link rel="stylesheet"  th:href="@{/bootstrap-3.3.7-dist/css/bootstrap.min.css}" type="text/css"  />
+		<title></title>
+		<style>
+			#btn-download {
+				display: none;
+			}
+			.wxtip{
+				/**
+             position: fixed;
+            top:0;
+            left:2%;
+            right:0;
+            width:96%;
+            height:0;
+            padding-top:38%;
+            background:url("../imgs/wxtip.png") no-repeat center;
+            background-size:cover;
+            **/
+           position: absolute;
+           top: 5px;
+           background-color: #204D74;
+           color: #ffffff;
+           
+        }
+        #wxtip {
+        	display: none;
+        }
+        
+		</style>
+		<script>
+		    var versionKey = '';
+			var versionCode = '';
+			var platform = '';
+			var canInstall = 'no';
+			var versionId = '';
+			window.onload = function() {
+			
+				// 首先从url中拿到参数，某个版本的id,然后通过版本id去查询下载按钮下的内容
+				versionKey = document.getElementById('versionKeyDiv').innerHTML;
+				versionCode = document.getElementById('versionCodeDiv').innerHTML;
+				platform = document.getElementById('platformDiv').innerHTML;
+				//然后获取手机平台信息
+				 var u = navigator.userAgent;
+				 var isWechat = u.match( /micromessenger/i );
+				 var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Linux') > -1;
+      			 var isIOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/);
+      			 var phonePlat = '';
+      			
+      			 if(isAndroid){
+      			 	phonePlat = 'Android';
+      			 }
+				if (isIOS) {
+					phonePlat = 'iOS';
+				}
+				 if (isWechat) {
+					phonePlat = 'weiXin';
+				}
+				// alert(appId +"*******"+versionCode)
+				if(versionKey&&versionCode&&platform){
+					// 发送请求，获取下载地址
+					//步骤一:创建异步对象
+					var ajax = new XMLHttpRequest();
+					//步骤二:设置请求的url参数,参数一是请求的类型,参数二是请求的url,可以带参数,动态的传递参数到服务端
+					ajax.open('get','../../../../appVersion/getDownloadVersion?versionKey='+versionKey+'&&versionCode='+versionCode
+					+'&&platform='+platform+'&&phonePlat='+phonePlat);
+					//步骤三:发送请求
+					ajax.send();
+					//步骤四:注册事件 onreadystatechange 状态改变就会调用
+					ajax.onreadystatechange = function () {
+					   if (ajax.readyState==4 &&ajax.status==200) {
+					    //步骤五 如果能够进到这个判断 说明 数据 完美的回来了,并且请求的页面是存在的
+					    var appObj = JSON.parse(ajax.responseText);
+					    //拿到对应的下载地址
+					    document.getElementById('btn-download').style.display = 'inline';
+					    document.getElementById('iconImg').src = appObj.iconPath;
+					    document.getElementById('appName').innerHTML = appObj.branchName+'('+appObj.projectName+')';
+					    document.getElementById('platform').innerHTML = appObj.platform;
+					    var appDescriptionStr = 
+					    '<span>版本号：'+ appObj.versionCode +'  &nbsp; &nbsp; 版本名称: '+appObj.versionName+' &nbsp; &nbsp;<br/>'+ 
+					  	 '发版时间：'+ appObj.createTime+ '</span><br/>'+
+   					    '<span>描述：'+ appObj.versionDescription +'</span>';
+					    document.getElementById('appDescription').innerHTML =appDescriptionStr;
+						canInstall = appObj.canInstall;
+					    if(appObj.canInstall == 'yes'){
+							    if(appObj.platform === 'Android' ){
+							    	//如果是android
+							    	document.getElementById('btn-download').href = appObj.filePath; 
+							    }else if(appObj.platform === 'iOS' ) {
+							    	//如果是ios
+							    	document.getElementById('btn-download').href = 'itms-services:///?action=download-manifest&url=' 
+							    	   + appObj.plistFilePath;
+							    }
+						        if(isWechat){
+					    	   	  document.getElementById('wxtip').style.display = 'inline';
+					    	   }else {
+					    	     versionId = appObj.versionId;
+					    	   }
+						  　　} else {
+						          document.getElementById('wxtip').style.display = 'inline';
+								  document.getElementById('wxtipContent').innerHTML ='暂无与该手机系统匹配的版本！';
+								  document.getElementById('btn-download').style.display = 'none';
+						  }
+					    }
+					}
+				}else{
+					document.getElementById('wxtip').style.display = 'inline';
+					document.getElementById('wxtipContent').innerHTML ='获取不到必要参数！请重新扫码';
+				}
+				
+				
+			}
+			
+		 function getQueryString(parmName)
+		{
+		     var reg = new RegExp("(^|&)"+ parmName +"=([^&]*)(&|$)");
+		     var r = window.location.search.substr(1).match(reg);
+		     if(r!=null){
+		     	return  unescape(r[2]);
+		     }
+		     return null;
+		}
+
+		function downLoadCount() {
+				if(versionId!=''){
+					// 发送请求，获取下载地址
+					//步骤一:创建异步对象
+					var ajax = new XMLHttpRequest();
+					//步骤二:设置请求的url参数,参数一是请求的类型,参数二是请求的url,可以带参数,动态的传递参数到服务端
+					ajax.open('get','../../appVersion/updateDownLoadNum?versionId='+versionId);
+					//步骤三:发送请求
+					ajax.send();
+				}	
+			}
+			
+		</script>
+		
+	</head>
+	<body>
+	<div id="versionKeyDiv" style="display: none;" th:text="${versionKey}"></div>
+	<div id="versionCodeDiv" style="display: none;" th:text="${versionCode}"></div>
+	<div id="platformDiv" style="display: none;" th:text="${platform}"></div>
+<div id="container" class="container-fluid">
+ <div id="wxtip" class="row">
+        <div id="wxtipContent" class="col-xs-6 col-xs-offset-6 wxtip" style="border-radius: 30px;">
+                请点击右上角菜单，选择“在浏览器打开”，完成下载步骤
+        </div>
+    </div>
+  <BR/>
+  <BR/>
+  <BR/>
+  <BR/>
+<div class="row">
+  <div class="col-xs-12 col-sm-12 text-center">
+      <img id="iconImg" src="" style="width: 90px; height: 90px">
+  </div>
+</div>
+
+<BR/>
+
+<div class="row">
+  <div class="col-xs-12 col-sm-12 text-center">
+      <span id="appName" style="font-size: 16px; font-weight: bold"></span>
+      <span style="font-size: 16px; font-weight: bold"> - </span>
+      <span id="platform" style="font-size: 16px; font-weight: bold"></span>
+  </div>
+</div>
+
+<BR/>
+
+<div class="row">
+  <div class="col-xs-12 text-center">
+  <a id="btn-download" type="button" class="btn btn-primary btn-lg" href="" onclick="downLoadCount()">立即下载</a>
+</div>
+
+  <BR/>
+  <BR/>
+  <BR/>
+  <div class="row text-center">
+    <HR STYLE="width: 300px"/>
+  </div>
+
+  <div class="row">
+    <div id="appDescription" class="col-xs-12 col-sm-12 text-center">
+      
+    </div>
+  </div>
+</div>
+		
+		
+	</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>下载页</title>
+		<link rel="stylesheet" th:href="@{/css/newstDownloadPage.css}" type="text/css" />
+		<script>
+			// 创建数据对象
+			var appObj = '';
+			var branchId = '';
+			window.onload = function() {
+				branchId = document.getElementById('branchIdDiv').innerHTML;
+				// 首先从url中拿到参数，某个版本的id,然后通过版本id去查询下载按钮下的内容
+				if(branchId){
+					// 发送请求，获取下载地址
+					//步骤一:创建异步对象
+					var ajax = new XMLHttpRequest();
+					//步骤二:设置请求的url参数,参数一是请求的类型,参数二是请求的url,可以带参数,动态的传递参数starName到服务端
+					// ajax.open('get','../appRelease/getNewestReleaseInfo?appId='+appId);
+					ajax.open('get','../../appBranch/findNewestBranchInfo?branchId='+branchId);
+					//步骤三:发送请求
+					ajax.send();
+					//步骤四:注册事件 onreadystatechange 状态改变就会调用
+					ajax.onreadystatechange = function () {
+					   if (ajax.readyState==4 &&ajax.status==200) {
+					    //步骤五 如果能够进到这个判断 说明 数据 完美的回来了,并且请求的页面是存在的
+					    appObj = JSON.parse(ajax.responseText);
+					    debugger;
+	 					branchName= appObj.branchName
+					    projectName = appObj.projectName;
+					    androidVersion = appObj.androidVersion;
+					    iosVersion = appObj.iosVersion;
+					    
+					    document.getElementById('appTitle').innerHTML = branchName+'('+projectName+')';
+					    
+					    if(androidVersion == null && iosVersion == null) {
+					    
+					    document.getElementById('downDiv').innerHTML = "抱歉,暂无可下载安装版本发布！";
+					    return;
+					    }
+					    
+					    
+					    if(androidVersion){
+					    	//向android信息面板中添加数据
+					    	 document.getElementById('androidIcon').src = androidVersion.iconPath;
+					    	 document.getElementById('androidVersionCode').innerHTML = androidVersion.versionName+"(bulid: "+ androidVersion.versionCode+")";
+					    	 document.getElementById('androidEwm').src = androidVersion.ewmImgPath;
+					    	 document.getElementById('btn-download-android').href = androidVersion.filePath;
+					    	 document.getElementById('androidCreateTime').innerHTML = androidVersion.createTime;
+					    	 document.getElementById('androidFileSize').innerHTML = androidVersion.fileSize +"MB";
+					    	 document.getElementById('androidDownloadNum').innerHTML = androidVersion.downloadNum;
+					    	 document.getElementById('androidDescription').innerHTML = androidVersion.versionDescription;
+					    }else {
+					    	// 如果没有查询到版本
+					    	document.getElementById('downLeftDiv').innerHTML = "";
+					    	document.getElementById('downLeftDiv').style.width = '0px';
+					    	document.getElementById('downRightDiv').style.width = '100%';
+					    	document.getElementById('vLineDiv').style.display = "none";
+					    	
+					    }
+					    
+					     if(iosVersion){
+					    	//向ios信息面板中添加数据
+					    	 document.getElementById('iosIcon').src = iosVersion.iconPath;
+					    	 document.getElementById('iosVersionCode').innerHTML = iosVersion.versionName+"(bulid: "+ iosVersion.versionCode+")";
+					    	 document.getElementById('iosEwm').src = iosVersion.ewmImgPath;
+					    	 document.getElementById('btn-download-ios').href = iosVersion.filePath;
+					    	 document.getElementById('iosCreateTime').innerHTML = iosVersion.createTime;
+					    	 document.getElementById('iosFileSize').innerHTML = iosVersion.fileSize +"MB";
+					    	 document.getElementById('iosDownloadNum').innerHTML = iosVersion.downloadNum;
+					    	 document.getElementById('iosDescription').innerHTML = iosVersion.versionDescription;
+					    }else {
+					    	// 如果没有查询到版本
+					    	document.getElementById('downRightDiv').innerHTML = "";
+					    	document.getElementById('downRightDiv').style.width = '0px';
+					    	document.getElementById('downLeftDiv').style.width = '100%';
+					    	document.getElementById('vLineDiv').style.display = "none";
+					    }
+				    	   
+					  　　}
+				    	   
+					}
+				}else{
+					alert("参数不正确，请核实后重新打开本页面！");
+				}
+				
+				
+			}
+			
+			
+            // 从URL中获取参数
+			function getQueryString(parmName) {
+				var reg = new RegExp("(^|&)" + parmName + "=([^&]*)(&|$)");
+				var r = window.location.search.substr(1).match(reg);
+				if(r != null) {
+					return unescape(r[2]);
+				}
+				return null;
+			}
+			
+		    function downLoadCount(platform) {
+				if(branchId!=''){
+					if(platform == 1) {
+						versionId = appObj.androidVersion.versionId;
+					}else if (platform == 2){
+						versionId = appObj.iosVersion.versionId;
+					}
+					// 发送请求，获取下载地址
+					//步骤一:创建异步对象
+					var ajax = new XMLHttpRequest();
+					//步骤二:设置请求的url参数,参数一是请求的类型,参数二是请求的url,可以带参数,动态的传递参数starName到服务端
+					ajax.open('get','../../appVersion/updateDownLoadNum?versionId='+versionId);
+					//步骤三:发送请求
+					ajax.send();
+				}
+	    	}
+		    
+		</script>
+		
+		
+	</head>
+
+	<body>
+		<div class="containerDiv">
+			<div class="leftDiv">
+				<div class="row">
+					<div class="col-lg-12 	col-md-12 col-sm-12 col-xs-12">
+						<img src="../../assets/download_left.png" class="img-responsive">
+					</div>
+				</div>
+			</div>
+			<div class="container centerDiv">
+				<div class="middleDiv">
+					
+					<div class="upDiv">
+						<span id="appTitle"></span>
+					</div>
+					<div id="branchIdDiv" style="display: none;" th:text="${branchId}"></div>
+					<div id="downDiv" class="downDiv">
+						<div id="downLeftDiv" class="downLeftDiv">
+							<div class="iconDiv">
+								<img id="androidIcon"  />
+							</div>
+							<div class="platFormDiv">Android</div>
+							<div id="androidVersionCode" class="platFormDiv"></div>
+							<div class="erWeiMaBorderDiv" >
+								<img id="androidEwm"  class="erWeiMaImg"  />
+							</div>
+							<div class="btnDiv">
+							<a id="btn-download-android" type="button" class="btn btn-primary btn-lg"  onclick="downLoadCount(1)">下载安装包</a>
+						    </div>
+							<div class="tableDiv">
+								<div class="labDiv">
+									<div class="labName">发版时间：</div> <div id="androidCreateTime" class="labValue">2018-04-01 12:12:12</div>
+								</div>
+								<div class="labDiv">
+									<div class="labName">文件大小：</div> <div id="androidFileSize" class="labValue">12.23MB</div>
+								</div>
+								<div class="labDiv">
+									<div class="labName">下载量：</div> <div id="androidDownloadNum" class="labValue">123</div>
+								</div>
+								<div class="labDiv">
+									<div class="labName">描述：</div> <div id="androidDescription" class="descripDiv"></div>
+								</div>
+							</div>
+							
+						</div>
+						<div id="downRightDiv" class="downRightDiv">
+							<div id="vLineDiv" class="vLineDiv"> </div>
+							<div class="iconDiv">
+								<img id="iosIcon"  />
+							</div>
+							<div class="platFormDiv">iOS</div>
+							<div id="iosVersionCode" class="platFormDiv"></div>
+							<div class="erWeiMaBorderDiv" >
+								<img id="iosEwm"  class="erWeiMaImg"  />
+							</div>
+							<div class="btnDiv">
+								<a id="btn-download-ios" type="button" class="btn btn-primary btn-lg"  onclick="downLoadCount(2)">下载安装包</a>
+						    </div>
+						   <div class="tableRightDiv">
+						  		<div class="labDiv">
+									<div class="labName">发版时间：</div> <div id="iosCreateTime" class="labValue">2018-04-01 12:12:12</div>
+								</div>
+								<div class="labDiv">
+									<div class="labName">文件大小：</div> <div id="iosFileSize" class="labValue">12.23MB</div>
+								</div>
+								<div class="labDiv">
+									<div class="labName">下载量：</div> <div id="iosDownloadNum" class="labValue">123</div>
+								</div>
+								<div class="labDiv">
+									<div class="labName">描述：</div> <div id="iosDescription" class="descripDiv"></div>
+								</div>
+						   </div>
+							
+						</div>
+					</div>
+					
+					
+					
+					
+					<!--
+					<div class="row  iconDiv">
+						<img id="iconImg">
+					</div>
+					<div class="row">
+						<div class="appNameDiv">
+							<span id="appName"></span>
+						</div>
+						<div class="appNameDiv versionDiv">
+							<span id="appinfo"></span>
+						</div>
+					</div>
+				
+					<div class="row downloadDiv" id="downloadDiv">
+						<div class="erWeiMaDiv">
+							<div class="erWeiMaBorderDiv" onmousemove="largeImg()" onmouseout="backImg()">
+								<img  id="erWeiMaImg" class="erWeiMaImg" width="160px" height="160px" />
+							</div>
+						</div>
+						<div class="btnDiv">
+							<a id="btn-download" type="button" class="btn btn-primary btn-lg"  onclick="downLoadCount()">下载安装包</a>
+						</div>
+					</div>
+					<div class="row">
+						<div class="descripDiv col-lg-6 	col-md-6 col-sm-6 col-xs-6 ">
+							<BR/>
+							<span>文件大小：<span id="fileSize"></span>MB &nbsp; &nbsp; </span>
+							<br/>
+							<span>发版时间：<span id="releaseTime"></span> &nbsp; &nbsp; </span>
+							<br/>
+							<span>备注：<span id="versionDescription"></span></span>
+						</div>
+					</div>
+					
+					-->
+				</div>
+
+			</div>
+
+			<div class="rightDiv">
+				<div class="row">
+					<div class="col-lg-12 	col-md-12 col-sm-12 col-xs-12">
+						<img src="../../assets/download_right.png" class="img-responsive rightImg">
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</body>
+
+</html>

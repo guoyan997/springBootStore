@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+		<style>
+			body {
+				margin: 0 auto;
+				vertical-align: middle;
+				text-align: center;
+			}
+			.tipDiv{
+				width:300px;  
+				height:300px;  
+				position:absolute;  
+				left:50%;  
+				top:50%;  
+				margin:-150px 0 0 -150px 
+			}
+		</style>
+		<script>
+			var versionKey = '';
+			var versionCode = '';
+			var platform = '';
+			
+			window.onload = function() {
+				// 首先从url中拿到参数，某个版本的id,然后通过版本id去查询下载按钮下的内容
+				versionKey = document.getElementById('versionKeyDiv').innerHTML;
+				versionCode = document.getElementById('versionCodeDiv').innerHTML;
+				platform = document.getElementById('platformDiv').innerHTML;
+				// 然后在获取手机的系统平台
+				 var u = navigator.userAgent;
+				 var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Linux') > -1;
+      			 var isIOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/);
+      			 var phonePlat = '';
+      			 if(isAndroid){
+      			 	phonePlat = 'Android';
+      			 }
+				if (isIOS) {
+					phonePlat = 'iOS';
+				}
+				if (versionKey!=''&&versionCode!=''&&platform!='') {
+					if(phonePlat!=''){
+					//发送请求，判断跳转
+					//步骤一:创建异步对象
+					var ajax = new XMLHttpRequest();
+					//步骤二:设置请求的url参数,参数一是请求的类型,参数二是请求的url,可以带参数,动态的传递参数starName到服务端
+					ajax.open('get','../../appVersion/getDownLoadVersion?appId='+appId+'&&versionCode='+versionCode+'&&phonePlat='+phonePlat);
+					//步骤三:发送请求
+					ajax.send();
+					//步骤四:注册事件 onreadystatechange 状态改变就会调用
+					ajax.onreadystatechange = function () {
+					   if (ajax.readyState==4 &&ajax.status==200) {
+					   	 var appObj = JSON.parse(ajax.responseText);
+					   	 if(appObj && appObj.versionKey != null){
+					   	 	 window.location.href = 'downloadPage.html?appId='+appObj.versionKey +'&&versionCode='+appObj.versionCode;
+					   	 }else {
+					   	 	document.getElementById('tipDiv').innerHTML = "暂无提供"+phonePlat+"版本的下载，请联系工作人员！";
+					   	 }
+					   	
+					   }
+					  }
+						
+					}else{
+						document.getElementById('tipDiv').innerHTML = "设备系统类型未知！";
+					}
+				}else {
+					 document.getElementById('tipDiv').innerHTML = "参数有误，请重新扫码！";
+				}
+				
+				
+				
+				
+				
+			}
+	/**		
+			function getQueryString(parmName)
+			{
+			     var reg = new RegExp("(^|&)"+ parmName +"=([^&]*)(&|$)");
+			     var r = window.location.search.substr(1).match(reg);
+			     if(r!=null){
+			     	return  unescape(r[2]);
+			     }
+			     return null;
+			}
+			**/
+		</script>
+		
+	</head>
+	<body>
+		<div id ="tipDiv" class="tipDiv">跳转中，请稍等......</div>
+		<div id="versionKeyDiv" style="display: none;" th:text="${versionKey}" ></div>
+		<div id="versionCodeDiv" style="display: none;" th:text="${versionCode}" ></div>
+		<div id="platformDiv" style="display: none;" th:text="${platform}" ></div>
+	</body>
+</html>
